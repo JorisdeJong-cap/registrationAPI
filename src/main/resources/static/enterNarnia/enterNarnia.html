@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p hidden>Let's see if there's enough room for you to frolic around in Narnia:</p>
+<p id="checkAllowed"></p>
+<button id="yesButton" onclick="window.location.href='enterNarnia.html'">Yes</button>
+<button id="noButton" onclick="window.location.href='/index.html'">No</button>
+</body>
+
+<script>
+    $(function () {
+        var amount = getAmountOfPeopleInNarnia();
+        $("#checkAllowed").append("Amount of tourists currently in Narnia: " + amount);
+        if (amount > 5) {
+            $("#checkAllowed").append("Sorry only a maximum of 5 tourists are allowed in Narnia.\n");
+            $("#yesButton").attr("disabled",true);
+            $("#noButton").attr("disabled",true);
+        } else {
+            $("#checkAllowed").append("It seems there is still some space left for you, would you like to enter?\n");
+        }
+    });
+
+    function getAmountOfPeopleInNarnia() {
+        $.ajax({
+            url: "border_control",
+            method: "GET",
+            contentType: "application/json",
+            success: function (data) {
+                return data.valueOf();
+            },
+            error: function (err, status) {
+                console.log("post error");
+                console.log(err);
+                alert(status);
+            }
+        });
+    }
+</script>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/buttons/1.5.6/css/buttons.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"/>
+
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script type="text/javascript"
+            src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/jquery.validate.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/additional-methods.min.js"></script>
+
+
+    <meta charset="UTF-8">
+    <title>Entrance</title>
+</head>
+<body class="bg-light">
+<button onclick="window.location.href='/index.html'">Back to main page</button>
+<h1>Hello! welcome to Narnia border control.</h1>
+<p>Who are you again? I need your first and last name:</p>
+<form id="nameCheck" method="post" action="">
+    <label for="fname">First name:</label>
+    <input type="text" id="fname">
+    <label for="lname">Last name:</label>
+    <input type="text" id="lname">
+    <input class="submit" type="submit" value="check">
+</form>
+<div id="exists">
+</div>
+<button hidden id="yesButton">Yes</button>
+<button hidden id="noButton" onclick="alert('ok then')">No</button>
+
+<!--spacer row-->
+<div style="display: inline-block;"></div>
+</body>
+
+<script>
+    $("#nameCheck").validate({
+        submitHandler: function () {
+            $.ajax({
+                url: "border_control",
+                method: "POST",
+                data: getNameData(),
+                contentType: "application/json",
+
+                success: function (data) {
+                    console.log("post success border");
+                    touristExists(data);
+                },
+                error: function (err, status) {
+                    console.log("post error");
+                    console.log(err);
+                    $("#exists").html("sorry, but you are not registered in the system, please go back and register first.");
+                }
+            });
+        }
+    });
+
+    function getNameData() {
+        var fname = $("#fname").val();
+        var lname = $("#lname").val();
+
+        var touristObject = {
+            firstName: fname,
+            lastName: lname
+        }
+
+        return JSON.stringify(touristObject);
+    }
+
+    function touristExists(data) {
+        $("#exists").prepend("ah! welcome back " + data.firstName+ " " + data.lastName + "\n");
+
+        console.log(data);
+
+        if (data["inNarnia"]) {
+            $("#exists").append("Would you like to leave Narnia?");
+            $("#yesButton").on("click",function(){
+                leaveNarnia(data)
+            });
+        } else {
+            $("#exists").append("Would you like to enter Narnia?");
+            $("#yesButton").on("click",function() {
+                enterNarnia(data)
+            });
+        }
+        $("#yesButton").attr("hidden", false);
+        $("#noButton").attr("hidden", false);
+    }
+
+    function leaveNarnia(data) {
+        $.ajax({
+            url: "leaveNarnia",
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function () {
+                console.log("put success");
+                alert("We hoped you enjoyed your stay!");
+            },
+            error: function (err, status) {
+                console.log("put error");
+                console.log(err);
+                alert(status);
+            }
+        });
+    }
+
+    function enterNarnia(data) {
+        $.ajax({
+            url: "checkAvailability",
+            method: "GET",
+            contentType: "application/json",
+            success: function () {
+                console.log("Get success");
+                $.ajax({
+                    url: "enterNarnia",
+                    method: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
+                    success: function () {
+                        console.log("put success");
+                        alert("Welcome to Narnia!");
+                    },
+                    error: function (err, status) {
+                        console.log("put error");
+                        console.log(err);
+                        alert(status);
+                    }
+                });
+            },
+            error: function (err, status) {
+                console.log("get error");
+                console.log(err);
+                alert("sorry, no more than 5 people allowed, please try again later.");
+            }
+        });
+
+
+    }
+</script>
+</html>
